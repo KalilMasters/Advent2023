@@ -34,33 +34,37 @@ namespace Advent2023
             int total = 0;
             foreach (string ogLine in lines)
             {
-                string line = ogLine;
-                int smallestIndex;
-                do
+                string line = "";
+                int nextRecordingIndex = 0;
+                for(int i = 0; i < ogLine.Length - 1; i++)
                 {
-                    KeyValuePair<string, int> smallestPair = default;
-                    smallestIndex = -1;
-                    foreach (var pair in nameToIntDictionary)
+                    string runningString = "" + ogLine[i];
+                    for(int j = i + 1; j < ogLine.Length; j++)
                     {
-                        int index = line.IndexOf(pair.Key);
-                        if ((smallestIndex == -1 || index < smallestIndex) && index != -1)
-                        {
-                            smallestPair = pair;
-                            smallestIndex = index;
-                        }
+                        runningString += ogLine[j];
+                        var kvps = nameToIntDictionary.Select(n => (runningString.IndexOf(n.Key) + i, n));
+                        var validKVPS = kvps.Where(kvp => !(kvp.Item1 - i).Equals(-1));
+                        var startingIndexOfKVP = validKVPS.FirstOrDefault();
+                        if (startingIndexOfKVP.n.Key == null)
+                            continue;
+                        if (nextRecordingIndex < startingIndexOfKVP.Item1)
+                            line += ogLine.Substring(nextRecordingIndex, startingIndexOfKVP.Item1 - nextRecordingIndex);
+                        nextRecordingIndex = startingIndexOfKVP.Item1 + startingIndexOfKVP.n.Key.Length;
+                        i = startingIndexOfKVP.Item1 + 1;
+                        line += startingIndexOfKVP.n.Value.ToString();
+                        runningString = "";
+                        break;
                     }
-                    if(smallestIndex != -1)
+                    if(runningString.Length > 0)
                     {
-                        string addChar = smallestIndex + smallestPair.Key.Length >= line.Length? "" : line[smallestIndex + smallestPair.Key.Length] + "";
-                        line = line.Replace(smallestPair.Key + addChar, smallestPair.Value.ToString() + addChar);
-
+                        line += runningString;
+                        break;
                     }
-                } while (smallestIndex != -1);
+                }
                 
                 var nums = line.Where(c => char.IsDigit(c)).Select(c => int.Parse(c.ToString()));
                 int sum = nums.First() * 10 + nums.Last();
                 total += sum;
-                Console.WriteLine(ogLine + "\n" + line + "\n" + sum);
             }
             Console.WriteLine("Calibration Sum: " + total);
         }
